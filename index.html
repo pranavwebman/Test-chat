@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Open Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .chat-container {
+      width: 400px;
+      height: 600px;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    .messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      margin: 5px 0;
+      padding: 8px 12px;
+      border-radius: 15px;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+    .sent {
+      background: #dcf8c6;
+      align-self: flex-end;
+    }
+    .received {
+      background: #eee;
+      align-self: flex-start;
+    }
+    .nickname {
+      font-size: 12px;
+      color: #555;
+    }
+    .input-container {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      background: #fafafa;
+    }
+    .input-container input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+    }
+    .input-container button {
+      margin-left: 10px;
+      padding: 10px 15px;
+      border: none;
+      background: #25d366;
+      color: white;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="messages" id="messages"></div>
+    <div class="input-container">
+      <input id="messageInput" placeholder="Type a message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script type="module">
+    // Import Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+    // ✅ Your Firebase config
+    const firebaseConfig = {
+  apiKey: "AIzaSyDpE67EpFp7EctwAc5zTIdZMZA1IjXXb74",
+  authDomain: "chat-app-b6990.firebaseapp.com",
+  databaseURL: "https://chat-app-b6990-default-rtdb.firebaseio.com",
+  projectId: "chat-app-b6990",
+  storageBucket: "chat-app-b6990.firebasestorage.app",
+  messagingSenderId: "552341980998",
+  appId: "1:552341980998:web:9eefda0697cc2d8dc60747"
+};
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const messagesRef = ref(db, "messages");
+
+    // Ask for nickname
+    let nickname = localStorage.getItem("nickname");
+    if (!nickname) {
+      nickname = prompt("Enter your nickname:");
+      localStorage.setItem("nickname", nickname);
+    }
+
+    // Send a message
+    window.sendMessage = function() {
+      const input = document.getElementById("messageInput");
+      const text = input.value.trim();
+      if (text) {
+        push(messagesRef, {
+          name: nickname,
+          text: text
+        });
+        input.value = "";
+      }
+    };
+
+    // Display messages
+    const messagesEl = document.getElementById("messages");
+    onChildAdded(messagesRef, (data) => {
+      const msg = data.val();
+      const div = document.createElement("div");
+      div.classList.add("message");
+
+      if (msg.name === nickname) {
+        div.classList.add("sent");
+      } else {
+        div.classList.add("received");
+        const nameEl = document.createElement("div");
+        nameEl.classList.add("nickname");
+        nameEl.textContent = msg.name;
+        div.appendChild(nameEl);
+      }
+
+      const textEl = document.createElement("div");
+      textEl.textContent = msg.text;
+      div.appendChild(textEl);
+
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    });
+  </script>
+</body>
+</html>
